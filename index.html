@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Paste a chess game and explore every move with local engine analysis.">
+  <meta name="theme-color" content="#0b1920">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1920'/%3E%3Ctext x='12' y='49' font-size='48' fill='%2386e2c7'%3E%E2%99%9E%3C/text%3E%3C/svg%3E">
+  <title>Chess Workbench — See the game beneath the moves</title>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Chess Workbench home"><span class="brand-mark">♞</span><span>CHESS <em>WORKBENCH</em></span></a>
+      <span class="topbar-note">A private analysis room in your browser</span>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme">◐ <span>Theme</span></button>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy"><p class="eyebrow"><span class="live-dot"></span> YOUR GAME, FRAME BY FRAME</p><h1 id="hero-title">See the game<br><i>beneath the moves.</i></h1><p class="hero-description">Paste a game. Watch the board unfold. See where the position turned, what the engine preferred, and which choices shaped the result.</p></div>
+        <div class="hero-aside"><span class="aside-kicker">ANALYSIS RUNS HERE</span><strong>On your device.</strong><p>Your notation stays in this browser. After the engine files load, review needs no server account or game upload.</p><div class="aside-lines" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
+      </section>
+
+      <section class="workbench" aria-label="Chess analysis workbench">
+        <div class="board-column">
+          <div class="panel board-panel">
+            <div class="panel-top"><div><span class="section-index">01 / REPLAY</span><h2>On the board</h2></div><button class="quiet-button" id="flip-board" type="button">↻ Flip board</button></div>
+            <div class="player-line"><span class="player-dot black"></span><strong id="black-name">Black</strong><span class="player-detail" id="black-detail">Waiting for a game</span></div>
+            <div class="board-row"><div class="eval-rail" aria-label="Position balance"><div id="eval-rail-fill"></div></div><div class="board-frame"><div class="board" id="board" role="img" aria-label="Chessboard from White's perspective"></div></div></div>
+            <div class="player-line bottom"><span class="player-dot white"></span><strong id="white-name">White</strong><span class="player-detail" id="white-detail">Ready to begin</span></div>
+            <div class="replay-controls"><button id="first" type="button" aria-label="First position">«</button><button id="previous" type="button" aria-label="Previous move">‹</button><button id="play" class="play-button" type="button" aria-label="Play animation">▶ <span>Play</span></button><button id="next" type="button" aria-label="Next move">›</button><button id="last" type="button" aria-label="Final position">»</button><span class="replay-position" id="replay-position">Starting position</span></div>
+            <input id="scrubber" class="scrubber" type="range" min="0" max="0" value="0" aria-label="Game position">
+          </div>
+        </div>
+
+        <div class="analysis-column">
+          <section class="panel input-panel" aria-labelledby="input-title"><div class="panel-top"><div><span class="section-index">02 / NOTATION</span><h2 id="input-title">Bring a game in</h2></div><span class="format-pill">PGN · MOVE TEXT</span></div>
+            <label class="field-label" for="notation">Paste a game</label><textarea id="notation" spellcheck="false" placeholder="1. e4 e5 2. Nf3 Nc6 3. Bc4 ..."></textarea>
+            <div class="input-actions"><button id="sample" class="text-button" type="button">Load sample game ↗</button><label class="text-button upload-label" for="pgn-file">Upload .pgn ↗</label><input id="pgn-file" type="file" accept=".pgn,.txt,text/plain"></div>
+            <div class="analysis-settings"><label for="depth">Analysis depth</label><select id="depth"><option value="8">Quick · depth 8</option><option value="12" selected>Balanced · depth 12</option><option value="16">Deep · depth 16</option></select></div>
+            <div class="primary-actions"><button id="analyze" class="analyze-button" type="button">Analyze game <span>↗</span></button><button id="cancel" class="cancel-button" type="button" hidden>Stop analysis</button></div>
+            <div class="progress-wrap" id="progress-wrap" hidden><div class="progress-head"><strong id="progress-label">Loading engine…</strong><span id="progress-count">0 / 0</span></div><div class="progress-track"><div id="progress-fill"></div></div></div>
+            <p id="input-error" class="input-error" role="alert" hidden></p>
+            <p class="input-hint">Standard algebraic moves and PGN files work. Analysis continues as you explore the board.</p>
+          </section>
+
+          <section class="panel insight-panel" aria-labelledby="insight-title"><div class="panel-top"><div><span class="section-index">03 / THE MOMENT</span><h2 id="insight-title">Position insight</h2></div><span class="turn-tag" id="turn-tag">START</span></div>
+            <div class="score-line"><div><span class="score-label">POSITION SCORE</span><strong class="score-value" id="score-value">—</strong></div><div class="score-copy"><strong id="score-side">Awaiting analysis</strong><span>Positive favors White<br>Negative favors Black</span></div></div>
+            <div class="insight-divider"></div><div class="move-insight"><span class="quality-pill waiting" id="quality-pill">No move selected</span><p id="insight-text">Enter notation to see the game. Run analysis to compare each move with the engine's preferred continuation.</p><span id="best-line" class="best-line"></span></div>
+            <div class="mini-stats"><div><span>MATERIAL</span><strong id="material">Even</strong></div><div><span>MOVE</span><strong id="move-index">0 / 0</strong></div></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="review-grid" aria-label="Game review">
+        <section class="panel graph-panel"><div class="panel-top"><div><span class="section-index">04 / POSITION SCORE</span><h2>The shape of the game</h2></div><span class="graph-key"><i></i> White edge <i></i> Black edge</span></div><svg id="eval-chart" viewBox="0 0 660 210" role="img" aria-label="Position score over the game; click to jump to a move"></svg><div class="graph-footer"><span>START</span><span>CLICK THE LINE TO REPLAY</span><span>FINISH</span></div></section>
+        <section class="panel moves-panel"><div class="panel-top"><div><span class="section-index">05 / EVERY CHOICE</span><h2>Move sheet</h2></div><span id="move-count-label" class="format-pill">NO GAME</span></div><div id="move-list" class="move-list"><p class="empty-moves">Your moves will appear here.</p></div></section>
+      </section>
+
+      <section class="bottom-grid"><section class="panel summary-panel"><div class="panel-top"><div><span class="section-index">06 / GAME AT A GLANCE</span><h2>Decision summary</h2></div></div><div id="summary" class="summary-content"><p>Analyze a game to compare each side's decisions.</p></div></section><section class="panel method-panel"><span class="section-index">ABOUT THE LABELS</span><h2>An engine’s view,<br><i>with room for nuance.</i></h2><p>Move labels are estimates based on expected score lost against the engine’s top line. <strong>Brilliant</strong> looks for a sound piece sacrifice; <strong>Great</strong> looks for a clearly stronger only move. Search depth and device speed can change a result.</p><p>The position score is shown in pawns from White’s side. A single game cannot establish a player’s rating.</p><a href="https://github.com/jedarden/chess.jedarden.com" target="_blank" rel="noopener noreferrer">View source and method ↗</a></section></section>
+    </main>
+    <footer class="site-footer"><span>CHESS WORKBENCH</span><span>Local analysis · Stockfish 19 small network · Built for curious players</span><span>♞</span></footer>
+  </div>
+  <div id="agentation-root"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
