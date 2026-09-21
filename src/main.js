@@ -79,7 +79,7 @@ function renderInsight() {
   const score = scoreAt(index);
   $('score-value').textContent = displayScore(score);
   $('score-value').className = `score-value ${score ? score.value > 0 ? 'positive' : score.value < 0 ? 'negative' : '' : ''}`;
-  $('score-side').textContent = !score ? 'Awaiting analysis' : score.kind === 'mate' ? `${score.value > 0 ? game.white : game.black} has a forced mate` : score.value > 20 ? `${game.white} is ahead` : score.value < -20 ? `${game.black} is ahead` : 'Roughly even';
+  $('score-side').textContent = !score ? 'Awaiting analysis' : score.kind === 'mate' ? `Forced mate: ${score.value > 0 ? game.white : game.black}` : score.value > 20 ? `Advantage: ${game.white}` : score.value < -20 ? `Advantage: ${game.black}` : 'Roughly even';
   const cp = score ? score.kind === 'mate' ? Math.sign(score.value) * 1200 : score.value : 0;
   $('eval-rail-fill').style.height = `${Math.round(50 + 49 * Math.tanh(cp / 320))}%`;
   const balance = game ? materialBalance(game.fens[index]) : 0;
