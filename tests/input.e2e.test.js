@@ -129,6 +129,24 @@ describe('documented game-input methods', { skip: executable ? false : 'No Chrom
     }
   });
 
+  test('offers the documented selectable analysis depths', async () => {
+    const page = await openPage();
+    try {
+      assert.deepEqual(await page.locator('#depth option').evaluateAll(options => options.map(option => ({ value: option.value, label: option.textContent }))), [
+        { value: '8', label: 'Quick · depth 8' },
+        { value: '12', label: 'Balanced · depth 12' },
+        { value: '16', label: 'Deep · depth 16' },
+      ]);
+      assert.equal(await page.locator('#depth').inputValue(), '12');
+      await page.locator('#depth').selectOption('8');
+      assert.equal(await page.locator('#depth').inputValue(), '8');
+      await page.locator('#depth').selectOption('16');
+      assert.equal(await page.locator('#depth').inputValue(), '16');
+    } finally {
+      await page.close();
+    }
+  });
+
   test('pastes PGN headers and legally replays every move', async () => {
     const page = await openPage();
     try {
