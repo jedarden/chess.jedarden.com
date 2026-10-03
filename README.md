@@ -35,4 +35,4 @@ These are deliberately transparent heuristics, not official labels or calibrated
 
 The app uses [chess.js](https://github.com/jhlywa/chess.js) for legal moves and PGN parsing, [Stockfish Web](https://github.com/lichess-org/stockfish-web) for local analysis, and [Agentation](https://github.com/benjitaylor/agentation) for visual feedback. The piece graphics are the standard SVG pieces bundled with python-chess. The engine's AGPL license is included in [LICENSE](LICENSE).
 
-Pushes to Forgejo `main` are the release source. The Argo deployment workflow builds the page and runs Wrangler to deploy it to Cloudflare Pages.
+Pushes to Forgejo `main` are the release source. The Argo deployment workflow builds the page and runs Wrangler to deploy it to Cloudflare Pages. See the [release and verification runbook](docs/release.md) for the complete deployment sequence, response-header contract, smoke test, and rollback procedure.
