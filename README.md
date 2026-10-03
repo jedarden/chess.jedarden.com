@@ -2,6 +2,8 @@
 
 A static chess game review at [chess.jedarden.com](https://chess.jedarden.com). Paste numbered moves or PGN, or upload a `.pgn` file. The page replays every move, calculates a running position score, and labels choices using a browser based Stockfish 19 small network engine. Analysis runs on the visitor's device; game notation is not sent to a server.
 
+See the [game input and PGN format guide](docs/input-format.md) for supported numbered moves, tags, comments, variations, results, uploads, examples, and invalid-input behavior.
+
 ## Local development
 
 Requires Node.js 22 or newer.
