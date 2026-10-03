@@ -15,6 +15,14 @@ npm run build
 
 `npm run build` writes the static page to `dist/`, including the engine JavaScript, WebAssembly, and neural network. The site needs `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` response headers for the engine. Cloudflare Pages reads these from `public/_headers`.
 
+After publishing, run the production smoke check with a Chromium executable:
+
+```sh
+CHESS_BROWSER_PATH=/path/to/chromium npm run test:production
+```
+
+It checks the public application and engine assets, COOP/COEP headers, a real depth-8 analysis, and the rendered Agentation toolbar. Set `CHESS_PRODUCTION_URL` to check another deployment.
+
 ## How the review works
 
 The engine evaluates every position, using two principal variations and a selectable search depth of 8, 12, or 16. The displayed score is in pawn units from White's perspective. A positive score favors White; a negative score favors Black. Forced mates use `M` notation. The graph shows how that score changes after each half move.
