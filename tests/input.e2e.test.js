@@ -74,7 +74,7 @@ describe('documented game-input methods', { skip: executable ? false : 'No Chrom
 
   before(async () => {
     await execFileAsync(process.execPath, ['scripts/prepare-engine.mjs'], { cwd: root });
-    server = await createServer({ configFile: resolve(root, 'vite.config.js'), server: { host: '127.0.0.1', port: 0 } });
+    server = await createServer({ configFile: resolve(root, 'vite.config.js'), server: { host: '127.0.0.1', port: 0, hmr: false } });
     await server.listen();
     const address = server.httpServer.address();
     baseUrl = `http://127.0.0.1:${address.port}`;
@@ -154,6 +154,50 @@ describe('documented game-input methods', { skip: executable ? false : 'No Chrom
       assert.equal(await page.locator('#white-name').textContent(), 'Alice');
       assert.equal(await page.locator('#black-name').textContent(), 'Bob');
       await replayEveryMove(page, expected);
+    } finally {
+      await page.close();
+    }
+  });
+
+  test('keeps game notation in the browser during analysis', async () => {
+    const page = await browser.newPage();
+    const requests = [];
+    const privateGame = `[Event "Browser Privacy Canary 7f4d2c"]
+[White "Notation Stays Local"]
+[Black "Network Must Not See This"]
+[Result "*"]
+
+1. e4 e5 2. Nf3 Nc6 *`;
+
+    page.on('request', request => requests.push({
+      url: request.url(),
+      method: request.method(),
+      resourceType: request.resourceType(),
+      postData: request.postData(),
+    }));
+
+    try {
+      await page.goto(`${baseUrl}/`);
+      await page.locator('#notation').waitFor();
+      await page.locator('#notation').fill(privateGame);
+      await page.locator('#depth').selectOption('8');
+      await page.locator('#analyze').click();
+      await page.waitForFunction(() => document.querySelector('#progress-label')?.textContent === 'Analysis complete', null, { timeout: 60000 });
+
+      const appOrigin = new URL(baseUrl).origin;
+      const staticFetches = new Set(['/engine/nn-61e7af4bb97d.nnue', '/engine/sf_19_smallnet.wasm']);
+      const nonStaticRequests = requests.filter(request => {
+        const url = new URL(request.url);
+        const dynamicResource = ['fetch', 'xhr', 'websocket'].includes(request.resourceType)
+          && !staticFetches.has(url.pathname);
+        return url.origin !== appOrigin || request.method !== 'GET' || request.postData !== null || dynamicResource;
+      });
+      assert.deepEqual(nonStaticRequests, [], 'analysis should only make same-origin static GET requests');
+
+      const wireData = requests.map(request => `${request.url}\n${request.postData ?? ''}`).join('\n');
+      assert.equal(decodeURIComponent(wireData.replaceAll('+', ' ')).includes(privateGame), false, 'game notation must not appear in request URLs or bodies');
+      assert.equal(await page.locator('#input-error').getAttribute('hidden'), '');
+      assert.equal(await page.locator('#progress-count').textContent(), '5 / 5');
     } finally {
       await page.close();
     }
