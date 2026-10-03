@@ -4,6 +4,8 @@ A static chess game review at [chess.jedarden.com](https://chess.jedarden.com). 
 
 See the [game input and PGN format guide](docs/input-format.md) for supported numbered moves, tags, comments, variations, results, uploads, examples, and invalid-input behavior.
 
+See the [browser compatibility and engine failure guide](docs/browser-compatibility.md) for the secure-context, cross-origin isolation, `SharedArrayBuffer`, and engine-asset requirements.
+
 ## Local development
 
 Requires Node.js 22 or newer.

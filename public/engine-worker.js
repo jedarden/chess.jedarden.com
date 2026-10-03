@@ -50,19 +50,40 @@ self.onmessage = event => {
 };
 
 async function startEngine() {
-try {
-  const engineUrl = '/engine/sf_19_smallnet.js';
-  const { default: createStockfish } = await import(/* @vite-ignore */ engineUrl);
-  engine = await createStockfish();
-  engine.listen = onLine;
-  engine.onError = error => self.postMessage({ type: 'error', message: String(error) });
-  const response = await fetch('/engine/nn-61e7af4bb97d.nnue');
-  if (!response.ok) throw new Error(`Engine data HTTP ${response.status}`);
-  engine.setNnueBuffer(new Uint8Array(await response.arrayBuffer()));
-  engine.uci('uci');
-} catch (error) {
-  self.postMessage({ type: 'error', message: error instanceof Error ? error.message : String(error) });
-}
+  try {
+    const engineUrl = '/engine/sf_19_smallnet.js';
+    let createStockfish;
+    try {
+      ({ default: createStockfish } = await import(/* @vite-ignore */ engineUrl));
+    } catch (error) {
+      throw new Error(`The engine code could not load from ${engineUrl}. ${error instanceof Error ? error.message : String(error)}`);
+    }
+    try {
+      engine = await createStockfish();
+    } catch (error) {
+      throw new Error(`The WebAssembly engine could not start. ${error instanceof Error ? error.message : String(error)}`);
+    }
+    engine.listen = onLine;
+    engine.onError = error => self.postMessage({ type: 'error', message: `The engine reported an error while running: ${String(error)}` });
+    const nnueUrl = '/engine/nn-61e7af4bb97d.nnue';
+    let response;
+    try {
+      response = await fetch(nnueUrl);
+    } catch (error) {
+      throw new Error(`The engine data file could not load from ${nnueUrl}. ${error instanceof Error ? error.message : String(error)}`);
+    }
+    if (!response.ok) throw new Error(`The engine data file could not load from ${nnueUrl} (HTTP ${response.status}).`);
+    const data = await response.arrayBuffer();
+    if (!data.byteLength) throw new Error(`The engine data file at ${nnueUrl} was empty.`);
+    try {
+      engine.setNnueBuffer(new Uint8Array(data));
+    } catch (error) {
+      throw new Error(`The engine data file could not be initialized. ${error instanceof Error ? error.message : String(error)}`);
+    }
+    engine.uci('uci');
+  } catch (error) {
+    self.postMessage({ type: 'error', message: error instanceof Error ? error.message : String(error) });
+  }
 }
 
 startEngine();

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseGame, expectedForSide, whiteScore, displayScore, classifyMove, materialBalance, gameSummary } from '../src/analysis.js';
+import { formatEngineFailure, getEngineCompatibility } from '../src/engine-support.js';
 
 const cp = (value, wdl = null) => ({ score: { kind: 'cp', value }, wdl });
 const result = (first, bestMove, second = null) => ({ first, bestMove, second });
@@ -150,4 +151,19 @@ test('summarizes reviewed decisions independently for each side', () => {
     counts: { mistake: 1 },
     averageLoss: 0.2,
   });
+});
+
+test('describes the browser prerequisites for local engine analysis', () => {
+  const supported = {
+    isSecureContext: true,
+    crossOriginIsolated: true,
+    SharedArrayBuffer: class SharedArrayBuffer {},
+    Worker: class Worker {},
+    WebAssembly: { instantiate() {} },
+  };
+  assert.deepEqual(getEngineCompatibility(supported), { ok: true, code: null, message: '' });
+  assert.equal(getEngineCompatibility({ ...supported, crossOriginIsolated: false }).code, 'cross-origin-isolation');
+  assert.equal(getEngineCompatibility({ ...supported, SharedArrayBuffer: undefined }).code, 'shared-array-buffer');
+  assert.equal(getEngineCompatibility({ ...supported, isSecureContext: false }).code, 'secure-context');
+  assert.match(formatEngineFailure(new Error('The engine data file could not load (HTTP 503).')), /required engine files/);
 });

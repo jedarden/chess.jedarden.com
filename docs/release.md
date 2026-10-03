@@ -98,8 +98,12 @@ rules intact when changing the site:
 
 The COOP and COEP headers must be present on the homepage and engine assets.
 Without them, `window.crossOriginIsolated` is false and the WebAssembly chess
-engine cannot load correctly. The Vite dev-server headers in `vite.config.js`
-are useful locally, but production headers come from `public/_headers`.
+engine cannot load correctly. The page also checks for a secure context,
+`SharedArrayBuffer`, Web Workers, and WebAssembly before starting analysis. The
+Vite dev-server headers in `vite.config.js` are useful locally, but production
+headers come from `public/_headers`. See the [browser compatibility and engine
+failure guide](browser-compatibility.md) for the user-facing behavior when a
+prerequisite or engine asset is unavailable.
 
 ## Post-publish URL verification
 

@@ -252,4 +252,21 @@ describe('documented game-input methods', { skip: executable ? false : 'No Chrom
       await page.close();
     }
   });
+
+  test('explains a failed engine asset load while keeping the game replayable', async () => {
+    const page = await openPage();
+    await page.route('**/engine/nn-61e7af4bb97d.nnue', route => route.fulfill({ status: 503, body: 'temporarily unavailable' }));
+    try {
+      await page.locator('#notation').fill('1. e4');
+      await page.locator('#depth').selectOption('8');
+      await page.locator('#analyze').click();
+      await page.locator('#input-error').waitFor({ state: 'visible', timeout: 15000 });
+      assert.match(await page.locator('#input-error').textContent(), /engine data file|engine analysis could not start/i);
+      assert.match(await page.locator('#input-error').textContent(), /replay/i);
+      assert.equal(await page.locator('#move-index').textContent(), '0 / 1');
+      assert.equal(await page.locator('#next').isDisabled(), false);
+    } finally {
+      await page.close();
+    }
+  });
 });

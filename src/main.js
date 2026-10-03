@@ -4,6 +4,7 @@ import { Agentation } from 'agentation';
 import { Chess } from 'chess.js';
 import pieces from './pieces.json';
 import { parseGame, whiteScore, displayScore, materialBalance, classifyMove, gameSummary } from './analysis.js';
+import { formatEngineFailure, getEngineCompatibility } from './engine-support.js';
 import './style.css';
 
 createRoot(document.getElementById('agentation-root')).render(React.createElement(Agentation));
@@ -21,9 +22,27 @@ let worker = null;
 let run = 0;
 let evaluations = [];
 let qualities = [];
+let engineCompatibility = getEngineCompatibility();
 
 function esc(value) {
   return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
+
+function setEngineStatus(message) {
+  $('engine-status').textContent = message;
+  $('engine-status').hidden = !message;
+}
+
+function refreshEngineCompatibility() {
+  engineCompatibility = getEngineCompatibility();
+  setEngineStatus(engineCompatibility.ok ? '' : engineCompatibility.message);
+}
+
+function showEngineFailure(message) {
+  const text = message instanceof Error ? formatEngineFailure(message) : message;
+  $('input-error').textContent = text;
+  $('input-error').hidden = false;
+  setEngineStatus(text);
 }
 
 function squarePlace(square) {
@@ -201,6 +220,7 @@ async function analyzeGame() {
   stopAnalysis();
   stopPlayback();
   $('input-error').hidden = true;
+  refreshEngineCompatibility();
   try { game = parseGame($('notation').value); }
   catch (error) { $('input-error').textContent = error.message; $('input-error').hidden = false; return; }
   index = 0;
@@ -215,6 +235,16 @@ async function analyzeGame() {
   $('analyze').disabled = true;
   $('cancel').hidden = false;
   render();
+  if (!engineCompatibility.ok) {
+    $('progress-wrap').hidden = false;
+    $('progress-label').textContent = 'Engine unavailable';
+    $('progress-count').textContent = `0 / ${game.fens.length}`;
+    $('progress-fill').style.width = '0%';
+    $('analyze').disabled = false;
+    $('cancel').hidden = true;
+    showEngineFailure(`Engine analysis is unavailable. ${engineCompatibility.message} You can still replay this game.`);
+    return;
+  }
   const myRun = ++run;
   const depth = Number($('depth').value);
   try {
@@ -245,7 +275,7 @@ async function analyzeGame() {
     }
     if (myRun === run) { w.terminate(); worker = null; $('analyze').disabled = false; $('cancel').hidden = true; }
   } catch (error) {
-    if (myRun === run) { stopAnalysis(); $('input-error').textContent = error.message; $('input-error').hidden = false; $('progress-label').textContent = 'Analysis interrupted'; }
+    if (myRun === run) { stopAnalysis(); showEngineFailure(error); $('progress-label').textContent = 'Analysis interrupted'; }
   }
 }
 
@@ -284,4 +314,5 @@ $('theme-toggle').addEventListener('click', () => {
 });
 const theme = localStorage.getItem('chess-workbench-theme');
 if (theme === 'dark' || theme === 'light') document.documentElement.dataset.theme = theme;
+refreshEngineCompatibility();
 render();
