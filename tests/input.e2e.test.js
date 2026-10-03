@@ -104,6 +104,26 @@ describe('documented game-input methods', { skip: executable ? false : 'No Chrom
     return expected;
   }
 
+  test('mounts the Agentation feedback toolbar', async () => {
+    const page = await openPage();
+    try {
+      const importMap = JSON.parse(await page.locator('script[type="importmap"]').textContent());
+      assert.deepEqual(importMap, {
+        imports: {
+          react: 'https://esm.sh/react@18.3.1',
+          'react-dom': 'https://esm.sh/react-dom@18.3.1',
+          'react-dom/client': 'https://esm.sh/react-dom@18.3.1/client',
+          'react/jsx-runtime': 'https://esm.sh/react@18.3.1/jsx-runtime',
+        },
+      });
+      assert.equal(await page.evaluate(() => Boolean(document.getElementById('agentation-root'))), true);
+      await page.locator('[data-feedback-toolbar]').waitFor({ state: 'attached', timeout: 15000 });
+      assert.ok(await page.locator('[data-feedback-toolbar]').count() > 0, 'Agentation toolbar should render');
+    } finally {
+      await page.close();
+    }
+  });
+
   async function replayEveryMove(page, expected) {
     for (let index = 0; index <= expected.moves.length; index++) {
       await page.waitForFunction(position => document.querySelector('#move-index')?.textContent?.startsWith(`${position} / `), index);
