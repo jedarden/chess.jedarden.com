@@ -117,7 +117,7 @@ describe('documented game-input methods', { skip: executable ? false : 'No Chrom
         },
       });
       assert.equal(await page.evaluate(() => Boolean(document.getElementById('agentation-root'))), true);
-      await page.locator('[data-feedback-toolbar]').waitFor({ state: 'attached', timeout: 15000 });
+      await page.locator('[data-feedback-toolbar]').first().waitFor({ state: 'attached', timeout: 15000 });
       assert.ok(await page.locator('[data-feedback-toolbar]').count() > 0, 'Agentation toolbar should render');
     } finally {
       await page.close();
