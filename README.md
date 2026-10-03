@@ -8,6 +8,8 @@ See the [browser compatibility and engine failure guide](docs/browser-compatibil
 
 See the [scoring and move-label rules](docs/scoring.md) for the exact analysis defaults, score conversion formulas, principal-variation semantics, and label thresholds.
 
+See the [dependency and asset provenance](docs/dependencies.md) page for pinned versions, sources, licenses, hashes, and the required update workflow.
+
 ## Local development
 
 Requires Node.js 22 or newer.
