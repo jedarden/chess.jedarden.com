@@ -6,6 +6,8 @@ See the [game input and PGN format guide](docs/input-format.md) for supported nu
 
 See the [browser compatibility and engine failure guide](docs/browser-compatibility.md) for the secure-context, cross-origin isolation, `SharedArrayBuffer`, and engine-asset requirements.
 
+See the [scoring and move-label rules](docs/scoring.md) for the exact analysis defaults, score conversion formulas, principal-variation semantics, and label thresholds.
+
 ## Local development
 
 Requires Node.js 22 or newer.
