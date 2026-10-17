@@ -96,6 +96,28 @@ file automatically. Press **Analyze game** to parse and review it. An upload
 uses the same rules and error handling as pasted text, regardless of the
 filename.
 
+## Safe rendering of untrusted text
+
+Everything a pasted game contributes is displayed as text, never turned into
+page markup. `White` and `Black` tag values are written into the name plates
+and review panels as text nodes or HTML-escaped before insertion, and the
+parser's explanation is written as text into the error region. A name, comment,
+or malformed input containing `<script>`, `<img onerror=...>`, quotes that look
+like attribute syntax, or `javascript:` URLs therefore shows up as literal
+characters: the browser creates no element, attaches no event handler, and runs
+nothing. Comments are dropped entirely and never reach the page, and a
+non-standard `Result` tag is rejected by the parser before it could be
+displayed.
+
+Browser tests enforce this end to end (`tests/safe-rendering.e2e.test.js`):
+hostile payloads submitted through tag values, comments, and malformed input
+must render as inert text in the name plates, move sheet, decision summary, and
+error region, while a JavaScript canary confirms no payload executed. The suite
+runs against a server that sends no Content-Security-Policy, so the escaping
+above is the barrier that makes this safe. A deployment that adds a
+Content-Security-Policy is a second layer on top of it, not the reason the page
+is safe.
+
 ## Empty or invalid input
 
 Parsing happens when **Analyze game** is pressed, not merely when text is
