@@ -17,7 +17,12 @@ const testPgn = `[Event "Browser input test"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 *`;
 
-async function runnableBrowser() {
+// Returns launch options for a working browser, or null when none exists.
+// Explicit candidates are probed first so CHESS_BROWSER_PATH keeps precedence;
+// an existing full-chrome binary can still crash at launch (missing host
+// libraries), so as a last resort the playwright-managed browser resolved
+// from PLAYWRIGHT_BROWSERS_PATH is probed too.
+async function browserLaunchOptions() {
   const candidates = [
     process.env.CHESS_BROWSER_PATH,
     process.env.BROWSER_PATH,
@@ -34,12 +39,18 @@ async function runnableBrowser() {
     try {
       const probe = await chromium.launch({ executablePath: candidate, headless: true });
       await probe.close();
-      return candidate;
+      return { executablePath: candidate };
     } catch {
       // A browser binary can exist while its host is missing a shared library.
     }
   }
-  return null;
+  try {
+    const probe = await chromium.launch({ headless: true });
+    await probe.close();
+    return {};
+  } catch {
+    return null;
+  }
 }
 
 function positionsFor(source) {
@@ -65,20 +76,23 @@ function positionsFor(source) {
   };
 }
 
-const executable = await runnableBrowser();
+const launchOptions = await browserLaunchOptions();
 
-describe('documented game-input methods', { skip: executable ? false : 'No Chromium executable found; set CHESS_BROWSER_PATH to run browser tests.' }, () => {
+describe('documented game-input methods', { skip: launchOptions ? false : 'No Chromium executable found; set CHESS_BROWSER_PATH to run browser tests.' }, () => {
   let browser;
   let server;
   let baseUrl;
 
   before(async () => {
     await execFileAsync(process.execPath, ['scripts/prepare-engine.mjs'], { cwd: root });
-    server = await createServer({ configFile: resolve(root, 'vite.config.js'), server: { host: '127.0.0.1', port: 0, hmr: false } });
+    server = await createServer({
+      configFile: resolve(root, 'vite.config.js'),
+      server: { host: '127.0.0.1', port: 0, hmr: false, watch: { ignored: ['**'] } },
+    });
     await server.listen();
     const address = server.httpServer.address();
     baseUrl = `http://127.0.0.1:${address.port}`;
-    browser = await chromium.launch({ executablePath: executable, headless: true });
+    browser = await chromium.launch({ ...launchOptions, headless: true });
   });
 
   after(async () => {
